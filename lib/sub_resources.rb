@@ -27,29 +27,61 @@ module ActionController
 
     private
 
-      def map_resource_with_sub_resources(entities, options = {}, &block)
-        sub_resources = options.delete(:sub_resources)
-        if sub_resources
-          resource = Resource.new(entities, options.dup) # Don't break options
-          with_options :controller => resource.controller, :path_prefix => resource.nesting_path_prefix_using_id, :name_prefix => resource.nesting_name_prefix do |map|
-            case sub_resources
-            when Hash
-              sub_resources.keys.each do |sub_entities|
-                map.map_resource(sub_entities, sub_resources[sub_entities].merge({:sub => true}))
-              end
-            when Array
-              sub_resources.each do |sub_entities|
-                map.map_resource(sub_entities, :sub => true)
-              end
-            else
-              sub_entities = sub_resources
+    def map_sub_resources(entities, options = {})
+      sub_resources = options.delete(:sub_resources)
+      if sub_resources
+        resource = Resource.new(entities, options.dup) # Don't break options
+        with_options :controller => resource.controller, :path_prefix => resource.nesting_path_prefix_using_id, :name_prefix => resource.nesting_name_prefix do |map|
+          case sub_resources
+          when Hash
+            sub_resources.keys.each do |sub_entities|
+              map.map_resource(sub_entities, sub_resources[sub_entities].merge({:sub => true}))
+            end
+          when Array
+            sub_resources.each do |sub_entities|
               map.map_resource(sub_entities, :sub => true)
             end
+          else
+            sub_entities = sub_resources
+            map.map_resource(sub_entities, :sub => true)
           end
         end
-        map_resource_without_sub_resources(entities, options, &block)
       end
+    end
 
+    def map_sub_singleton_resource(entities, options = {})
+      sub_resource = options.delete(:sub_resource)
+      if sub_resource
+        resource = Resource.new(entities, options.dup) # Don't break options
+        with_options :controller => resource.controller, :path_prefix => resource.nesting_path_prefix_using_id, :name_prefix => resource.nesting_name_prefix do |map|
+          case sub_resource
+          when Hash
+            sub_resource.keys.each do |sub_entities|
+              map.map_singleton_resource(sub_entities, sub_resource[sub_entities].merge({:sub => true}))
+            end
+          when Array
+            sub_resource.each do |sub_entities|
+              map.map_singleton_resource(sub_entities, :sub => true)
+            end
+          else
+            sub_entities = sub_resource
+            map.map_singleton_resource(sub_entities, :sub => true)
+          end
+        end
+      end
+    end
+
+    def map_resource_with_sub_resources(entities, options = {}, &block)
+      map_sub_resources(entities, options)
+      map_sub_singleton_resource(entities, options)
+      map_resource_without_sub_resources(entities, options, &block)
+    end
+
+    def map_singleton_resource_with_sub_resources(entities, options = {}, &block)
+      map_sub_resources(entities, options)
+      map_sub_singleton_resource(entities, options)
+      map_singleton_resource_without_sub_resources(entities, options, &block)
+    end
 
     def map_collection_actions_with_plural_edit_support(map, resource)
       resource.collection_methods.each do |method, actions|
@@ -83,6 +115,8 @@ module ActionController
         resource.plural
       when "edit_all", "update_all", "destroy_all"
         "#{base_action_name.gsub(/_all$/, '')}_#{resource.plural}"
+      when "show"
+        resource.singular
       else
         "#{base_action_name}_#{resource.singular}"
       end
@@ -91,6 +125,7 @@ module ActionController
 
     alias_method_chain :action_options_for, :sub_resources
     alias_method_chain :map_resource, :sub_resources
+    alias_method_chain :map_singleton_resource, :sub_resources
     alias_method_chain :map_collection_actions, :plural_edit_support
   end
 end
