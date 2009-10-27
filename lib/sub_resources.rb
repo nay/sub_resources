@@ -12,8 +12,8 @@ module ActionController
         @sub
       end
 
-      def nesting_path_prefix_using_id
-        @nesting_path_prefix_using_id ||= "#{shallow_path_prefix}/#{path_segment}/:id"
+      def nesting_path_prefix_for_sub_resources
+        @nesting_path_prefix_for_sub_resources ||= "#{shallow_path_prefix}/#{path_segment}/:id"
       end
 
       def member_path_with_sub_resources
@@ -25,13 +25,19 @@ module ActionController
       alias_method_chain :member_path, :sub_resources
     end
 
+    class SingletonResource < Resource #:nodoc:
+      def nesting_path_prefix_for_sub_resources
+        @nesting_path_prefix_for_sub_resources ||= "#{shallow_path_prefix}/#{path_segment}"
+      end
+    end
+
     private
 
-    def map_sub_resources(entities, options = {})
+    def map_sub_resources(entities, singleton, options = {})
       sub_resources = options.delete(:sub_resources)
       if sub_resources
-        resource = Resource.new(entities, options.dup) # Don't break options
-        with_options :controller => resource.controller, :path_prefix => resource.nesting_path_prefix_using_id, :name_prefix => resource.nesting_name_prefix do |map|
+        resource = parent_resource(entities, singleton, options)
+        with_options :controller => resource.controller, :path_prefix => resource.nesting_path_prefix_for_sub_resources, :name_prefix => resource.nesting_name_prefix do |map|
           case sub_resources
           when Hash
             sub_resources.keys.each do |sub_entities|
@@ -49,11 +55,11 @@ module ActionController
       end
     end
 
-    def map_sub_singleton_resource(entities, options = {})
+    def map_sub_singleton_resource(entities, singleton, options = {})
       sub_resource = options.delete(:sub_resource)
       if sub_resource
-        resource = Resource.new(entities, options.dup) # Don't break options
-        with_options :controller => resource.controller, :path_prefix => resource.nesting_path_prefix_using_id, :name_prefix => resource.nesting_name_prefix do |map|
+        resource = parent_resource(entities, singleton, options)
+        with_options :controller => resource.controller, :path_prefix => resource.nesting_path_prefix_for_sub_resources, :name_prefix => resource.nesting_name_prefix do |map|
           case sub_resource
           when Hash
             sub_resource.keys.each do |sub_entities|
@@ -71,15 +77,19 @@ module ActionController
       end
     end
 
+    def parent_resource(entities, singleton, options)
+      singleton ? SingletonResource.new(entities, options.dup) : Resource.new(entities, options.dup) # Don't break options
+    end
+
     def map_resource_with_sub_resources(entities, options = {}, &block)
-      map_sub_resources(entities, options)
-      map_sub_singleton_resource(entities, options)
+      map_sub_resources(entities, false, options)
+      map_sub_singleton_resource(entities, false, options)
       map_resource_without_sub_resources(entities, options, &block)
     end
 
     def map_singleton_resource_with_sub_resources(entities, options = {}, &block)
-      map_sub_resources(entities, options)
-      map_sub_singleton_resource(entities, options)
+      map_sub_resources(entities, true, options)
+      map_sub_singleton_resource(entities, true, options)
       map_singleton_resource_without_sub_resources(entities, options, &block)
     end
 
@@ -129,9 +139,3 @@ module ActionController
     alias_method_chain :map_collection_actions, :plural_edit_support
   end
 end
-
-#module SubResourcesSupport
-#  def self.included(base)
-#    base.
-#  end
-#end
