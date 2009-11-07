@@ -112,7 +112,6 @@ module ActionController
 
     def action_options_for_with_sub_resources(action, resource, method = nil, resource_options = {})
       default_options = action_options_for_without_sub_resources(action, resource, method, resource_options)
-
       if resource.sub?
         default_options[:action] = sub_action_name_for(default_options[:action], resource)
       end
@@ -128,7 +127,7 @@ module ActionController
       when "show"
         resource.singular
       else
-        "#{base_action_name}_#{resource.singular}"
+        "#{base_action_name}_#{resource.collection_methods.values.flatten.include?(base_action_name.to_sym) ? resource.plural : resource.singular}"
       end
     end
 
