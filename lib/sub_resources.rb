@@ -98,7 +98,7 @@ module ActionController
         actions.each do |action|
           [method].flatten.each do |m|
             case action.to_s
-            when "update_all", "destroy_all", "create_all"
+            when "update_all", "destroy_all"
               map_resource_routes(map, resource, action, "#{resource.path}", "#{resource.name_prefix}#{resource.plural}", m)
             when "edit_all"
               map_resource_routes(map, resource, action, "#{resource.path}#{resource.action_separator}edit", "edit_#{resource.name_prefix}#{resource.plural}", m)
