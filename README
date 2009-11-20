@@ -54,7 +54,7 @@ GET /reports/:id/tags/:tag_id/foo (foo_report_tag)
 POST /reports/:id/tags/bar (bar_report_tags)
      #bar_tags
 
-To describe edit/update/destroy action for multiple records, use the specific action names.
+To describe edit/update/destroy action for multiple records, use specific action names.
 sub_resources plugin handles 'edit_all', 'update_all', 'destroy_all' as special actions so only needed is to use those action names.
 
   map.resources :reports, :collection => {:edit_all => :get, :update_all => :put, :destroy_all => :delete}
@@ -81,5 +81,6 @@ PUT       /reports/:id/tags (report_tags)
 DELETE /reports/:id/tags
   #destroy_tags
 
+This plugin was tested on Rails 2.3.3 and Rails 2.3.4.
 
 Copyright (c) 2009 Yasuko Ohba, released under the MIT license
