@@ -2,6 +2,10 @@ SubResources
 ============
 sub_resources plugin adds several features to ActionController::Resources so that you can implement some common patterns in the RESTful way.
 
+To install this plugin, please use script/plugin install.
+
+ > script/plugin install git://github.com/nay/sub_resources.git
+
 Firstly, the regular map.resources and map.resource support good url-mapping patterns, but there are still some common RESTful patterns unsupported. Most of them are grouped in two types.
 
 1. The case that several kinds of resources are implemented in one controller. In such a controller, there are one main resource type and other subordinate resource types, which I call 'sub resources'. For example, it's the case that 'GET /reports/3/tags' is expected to be mapped with ReportsController#tags instead of ReportTagsController#index.
@@ -81,6 +85,6 @@ PUT       /reports/:id/tags (report_tags)
 DELETE /reports/:id/tags
   #destroy_tags
 
-This plugin was tested on Rails 2.3.3 and Rails 2.3.4.
+This plugin was tested on Rails 2.3.3, Rails 2.3.4 and Rails 2.3.5.
 
 Copyright (c) 2009 Yasuko Ohba, released under the MIT license
